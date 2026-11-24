@@ -1,0 +1,33 @@
+docs/phase-1-source-guide.html
+  s_6a97cec3e3313f::t_153b2904d0bb2f 42
+  s_6a97cec3e3313f::t_a5897f4481d15d 336,341,346,351,356,361
+  s_6a97cec3e3313f::t_df58792afcfbec 71,73
+  s_6a97cec3e3313f::t_6a6acc44af57b0 72,86-87
+  s_6a97cec3e3313f::t_79092afb7791a2 323,329,365
+  s_6a97cec3e3313f::t_a49ba5a89f35bf 21-30,37-39,45-70,74-85,88-140,208-240,366
+  s_6a97cec3e3313f::t_8632a4485936d9 1-20,40-41,43,141-149,241-322,324-328,330-335,337-340,342-345,347-350,352-355,357-360,362-364
+  s_6a97cec3e3313f::t_6fea69dda538f2 31-36,44,150-207
+docs/phase-2-design.md
+  s_6a97cec3e3313f::t_ac5c41f6a9b92b 1-50
+docs/upstream-analysis.md
+  s_6a97cec3e3313f::t_ac5c41f6a9b92b 1-35,38
+  s_6a97cec3e3313f::t_941d95128e5636 36-37
+docs/extension-points.md
+  s_6a97cec3e3313f::t_acc91ae128cd3a 1-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "ai_metrics_version": "2.0.6",
+  "base_commit_sha": "f126fffc2a2923b1f1daa97e33dc437256edd5ed",
+  "prompts": {},
+  "sessions": {
+    "s_6a97cec3e3313f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20b91-cbc9-7a32-a878-468812b034a2",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "liushuai37 <m15503698480@163.com>"
+    }
+  }
+}
