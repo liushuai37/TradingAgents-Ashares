@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TradingAgents-Ashares 源码导读</title><style>
+:root{color-scheme:light;--ink:#18263a;--muted:#46566d;--line:#dce5ef;--accent:#145b9e}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fa;color:var(--ink);font:16px/1.75 system-ui,"Microsoft YaHei",sans-serif}
+header{background:#142d4b;color:white;padding:3rem max(1.25rem,calc((100% - 1050px)/2))}
+h1{font-size:clamp(1.9rem,5vw,3rem);line-height:1.2;margin:0 0 .8rem}
+header p{margin:.3rem 0;color:#dce9f8}
+nav{display:flex;gap:.5rem 1.2rem;flex-wrap:wrap;margin-top:1.25rem}
+nav a{color:white;text-underline-offset:.22em}
+main{max-width:1100px;margin:auto;padding:1rem}
+section{background:white;border:1px solid var(--line);border-radius:14px;margin:1rem 0;padding:clamp(1rem,4vw,2.6rem);overflow-wrap:anywhere}
+h2,h3{line-height:1.35;margin:1.5em 0 .55em}section>h2:first-child{margin-top:0}
+a{color:var(--accent)}code{font-family:Consolas,monospace;background:#edf3fa;padding:.12em .28em;border-radius:4px}
+pre{overflow:auto;background:#142d4b;color:#f4f8ff;padding:1rem;border-radius:8px}pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:.94rem}th,td{border:1px solid var(--line);text-align:left;vertical-align:top;padding:.55rem .65rem}
+th,.diagram,.flow li{background:#eef5fc}.diagram{border-left:4px solid var(--accent);padding:.4rem 1rem}
+li{margin:.4rem 0}.flow li{padding:.45rem .7rem;border-radius:6px}.back{display:inline-block;margin-top:1rem}
+@media print{body{background:white}header,pre{color:black;background:white}header p,nav a{color:black}section{border:0;padding:.5rem}pre{white-space:pre-wrap}.back{display:none}}
+.source-map{margin:1rem 0 2rem}
+.map-scroll{overflow-x:auto;border:1px solid #cedce3;border-radius:12px;background:#f8fbfc}
+.map-scroll:focus-visible{outline:3px solid #145b9e;outline-offset:2px}
+.source-map svg{display:block;width:100%;min-width:750px;height:auto}
+.source-map svg text{text-anchor:middle;font-family:"Microsoft YaHei",system-ui,sans-serif}
+.map-title{font-size:18px;font-weight:650;fill:#173848}
+.map-detail,.edge-label{font-size:14px;fill:#395465}
+.edge-label{font-weight:550}
+.source-map .light{fill:white}
+.wire{fill:none;stroke:#49657b;stroke-width:2;stroke-linejoin:round}
+.seq-life{stroke:#94a8b6;stroke-width:1.3;stroke-dasharray:4 5}
+.seq-return{stroke-dasharray:7 4}
+.seq-msg,.seq-tag,.seq-note{font-size:15px;fill:#183b4b}
+.seq-msg,.seq-note{paint-order:stroke;stroke:#f8fbfc;stroke-width:4px;stroke-linejoin:round}
+.source-map svg .seq-note{text-anchor:start}
+.seq-tag{font-weight:650}
+.source-map figcaption{margin:.7rem .15rem;color:#46566d;font-size:.93rem}
+.source-map figcaption span{display:block;margin-top:.25rem}
+@media print{.source-map{break-inside:avoid}.source-map svg{min-width:0}.map-scroll{overflow:visible}}
+</style></head>
+<body><header id="top"><h1>TradingAgents-Ashares 源码导读</h1>
+<p>沿项目源码查看研究入口、图编排、数据工具和最终报告。</p>
+<p>Phase 1 审计基准 <code style="color:#142d4b">9fa1196fffbcfd9de5146d2dd2869df84ab99838</code></p>
+<nav aria-label="目录"><a href="#architecture">模块架构</a><a href="#guide">研究执行流程</a><a href="#sequence">调用时序</a><a href="#tools-flow">工具调用流程</a><a href="#upstream">原版能力与执行链路</a><a href="#extensions">扩展点</a></nav></header><main>
+<section id="architecture"><h2>模块架构</h2>
+<figure class="source-map" id="architecture-map">
+<div class="map-scroll" tabindex="0" role="region" aria-label="TradingAgents 模块架构，窄屏可横向滚动">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 482" role="img" aria-labelledby="architecture-map-title architecture-map-desc">
+<title id="architecture-map-title">TradingAgents 模块架构</title>
+<desc id="architecture-map-desc">两个入口共用 TradingAgentsGraph。沿箭头可找到研究角色使用的模型与数据，以及负责恢复、记录和导出的模块。</desc>
+<defs><marker id="architecture-map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#49657b"/></marker></defs>
+<path class="wire" d="M225 80 V98 H450 V122" marker-end="url(#architecture-map-arrow)"/>
+<path class="wire" d="M675 80 V98 H450"/>
+<g><rect x="105" y="16" width="240" height="64" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="225" y="46" class="map-title">命令行入口</text><text x="225" y="68" class="map-detail">cli.run · run_analysis</text></g>
+<g><rect x="555" y="16" width="240" height="64" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="675" y="46" class="map-title">Python API</text><text x="675" y="68" class="map-detail">TradingAgentsGraph.propagate</text></g>
+<g><rect x="246" y="124" width="408" height="68" rx="9" fill="#1b3c50" stroke="#1b3c50"/>
+<text x="450" y="156" class="map-title light">TradingAgentsGraph</text><text x="450" y="178" class="map-detail light">构建工作流、准备状态、驱动执行</text></g>
+<path class="wire" d="M345 192 V210 H232 V228" marker-end="url(#architecture-map-arrow)"/>
+<path class="wire" d="M555 192 V210 H670 V228" marker-end="url(#architecture-map-arrow)"/>
+<g><rect x="34" y="230" width="396" height="74" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="232" y="265" class="map-title">研究角色与条件路由</text><text x="232" y="287" class="map-detail">GraphSetup 组图 · AgentState 传递研究结果</text></g>
+<g><rect x="470" y="230" width="396" height="74" rx="9" fill="#fff4dc" stroke="#b08a49"/>
+<text x="668" y="265" class="map-title">运行记录与恢复</text><text x="668" y="287" class="map-detail">按运行阶段读取历史、保存状态与结果</text></g>
+<path class="wire" d="M232 304 V324 H110 V348" marker-end="url(#architecture-map-arrow)"/>
+<path class="wire" d="M232 324 H342 V348" marker-end="url(#architecture-map-arrow)"/>
+<path class="wire" d="M670 304 V324 H564 V348" marker-end="url(#architecture-map-arrow)"/>
+<path class="wire" d="M670 324 H784 V348" marker-end="url(#architecture-map-arrow)"/>
+<g><rect x="10" y="350" width="200" height="82" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="110" y="375" class="map-title">模型客户端</text>
+<text x="110" y="398" class="map-detail">quick · 快速思考档</text>
+<text x="110" y="419" class="map-detail">deep · 深度思考模型</text></g>
+<g><rect x="230" y="350" width="224" height="82" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="342" y="389" class="map-title">分析师数据访问</text><text x="342" y="411" class="map-detail">工具路由或节点内预取</text></g>
+<g><rect x="470" y="350" width="188" height="82" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="564" y="389" class="map-title">执行期间</text><text x="564" y="411" class="map-detail">Memory · 可选 SQLite</text></g>
+<g><rect x="680" y="350" width="208" height="82" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="784" y="389" class="map-title">完成后</text><text x="784" y="411" class="map-detail">决策日志 · 可选报告</text></g>
+<text class="edge-label" x="450" y="464">工具供应商路由、情绪数据预取和历史决策结算各有自己的调用入口。</text>
+</svg></div>
+<figcaption>两个入口共用 TradingAgentsGraph。沿箭头可找到研究角色使用的模型与数据，以及负责恢复、记录和导出的模块。 <span>源码依据　<a href="../tradingagents/graph/trading_graph.py">TradingAgentsGraph</a> · <a href="../tradingagents/graph/setup.py">GraphSetup</a> · <a href="../tradingagents/llm_clients/factory.py">模型工厂</a> · <a href="../tradingagents/memory/log.py">决策记忆</a> · <a href="../tradingagents/reporting.py">报告导出</a></span></figcaption>
+</figure>
+</section>
+<section id="guide"><h2>一次研究如何执行</h2>
+<p>分析师、多空研究员、交易员和风险辩手使用 <code>quick_think_llm</code> 指定的模型。研究经理和组合经理使用 <code>deep_think_llm</code> 指定的模型，分别形成研究计划和最终判断。<a href="../tradingagents/graph/setup.py">角色与模型的分配</a></p>
+<p>情绪分析中还有一个可选步骤。启用 Jev 时，它先筛选 StockTwits 和 Reddit 帖子，判断帖子是否与标的相关，并统计作者立场。情绪分析师随后使用 quick 档模型综合新闻和社交资料，撰写报告。<a href="../tradingagents/agents/post_screen.py">Jev 筛选逻辑</a> · <a href="../tradingagents/agents/analysts/sentiment_analyst.py">情绪报告生成逻辑</a></p>
+<figure class="source-map" id="research-map">
+<div class="map-scroll" tabindex="0" role="region" aria-label="一次研究的执行流程，窄屏可横向滚动">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="research-map-title research-map-desc">
+<title id="research-map-title">一次研究的执行流程</title>
+<desc id="research-map-desc">图中展示默认四位分析师。只选择行情和新闻时，父图等待这两份报告与 Memory Log 完成，再由多头研究员开场。</desc>
+<defs><marker id="research-map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#49657b"/></marker></defs>
+<g><rect x="282" y="16" width="336" height="64" rx="9" fill="#1b3c50" stroke="#1b3c50"/>
+<text x="450" y="46" class="map-title light">准备本轮研究</text><text x="450" y="68" class="map-detail light">标的、研究日期、可选持仓</text></g>
+<path class="wire" d="M450 80 V102"/>
+<path class="wire" d="M98 102 H802"/>
+<path class="wire" d="M98 102 V125" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M274 102 V125" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M450 102 V125" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M626 102 V125" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M802 102 V125" marker-end="url(#research-map-arrow)"/>
+<g><rect x="16" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="98" y="159" class="map-title">行情</text><text x="98" y="181" class="map-detail">量价与指标</text></g>
+<g><rect x="192" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="274" y="159" class="map-title">情绪</text><text x="274" y="181" class="map-detail">新闻与社交预取</text></g>
+<g><rect x="368" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="450" y="159" class="map-title">新闻</text><text x="450" y="181" class="map-detail">标的与宏观新闻</text></g>
+<g><rect x="544" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="626" y="159" class="map-title">基本面</text><text x="626" y="181" class="map-detail">财务数据</text></g>
+<g><rect x="720" y="127" width="164" height="68" rx="9" fill="#fff4dc" stroke="#b08a49"/>
+<text x="802" y="159" class="map-title">Memory Log</text><text x="802" y="181" class="map-detail">结算与读取经验</text></g>
+<path class="wire" d="M98 195 V216"/>
+<path class="wire" d="M274 195 V216"/>
+<path class="wire" d="M450 195 V216"/>
+<path class="wire" d="M626 195 V216"/>
+<path class="wire" d="M802 195 V216"/>
+<path class="wire" d="M98 216 H802"/>
+<path class="wire" d="M450 216 V250" marker-end="url(#research-map-arrow)"/>
+<text class="edge-label" x="543" y="240">全部分支完成</text>
+<g><rect x="260" y="252" width="380" height="70" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="450" y="285" class="map-title">多头 ⇄ 空头</text><text x="450" y="307" class="map-detail">轮流发言，默认各 1 次</text></g>
+<path class="wire" d="M450 322 V338 H286 V356" marker-end="url(#research-map-arrow)"/>
+<g><rect x="139" y="358" width="294" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="286" y="390" class="map-title">研究经理</text><text x="286" y="412" class="map-detail">汇总争议，形成研究计划</text></g>
+<g><rect x="517" y="358" width="244" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="639" y="390" class="map-title">交易员</text><text x="639" y="412" class="map-detail">据研究计划提出交易方案</text></g>
+
+<path class="wire" d="M433 392 H515" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M639 426 V448 H450 V470" marker-end="url(#research-map-arrow)"/>
+<g><rect x="221" y="472" width="458" height="70" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="450" y="505" class="map-title">激进 → 保守 → 中性</text><text x="450" y="527" class="map-detail">按顺序讨论风险，默认各 1 次</text></g>
+<path class="wire" d="M450 542 V568" marker-end="url(#research-map-arrow)"/>
+<g><rect x="246" y="570" width="408" height="60" rx="9" fill="#1b3c50" stroke="#1b3c50"/>
+<text x="450" y="598" class="map-title light">组合经理</text><text x="450" y="620" class="map-detail light">结合研究、风险意见与历史经验作出最终判断</text></g>
+<path class="wire" d="M450 630 V654" marker-end="url(#research-map-arrow)"/>
+<text class="edge-label" x="450" y="680">记录决策与评级　·　按需导出报告</text>
+</svg></div>
+<figcaption>图中展示默认四位分析师。只选择行情和新闻时，父图等待这两份报告与 Memory Log 完成，再由多头研究员开场。 <span>源码依据　<a href="../tradingagents/graph/setup.py">setup_graph</a> · <a href="../tradingagents/graph/conditional_logic.py">发言轮次与出口</a> · <a href="../tradingagents/graph/trading_graph.py">_memory_step / record_decision</a></span></figcaption>
+</figure>
+<p>以输入 <code>600519.SH</code>、选择 market 和 news、指定一个过去的研究日期为例。这个例子只演示调用顺序，未请求行情或生成投资结论。</p>
+<ol class="flow">
+<li><strong>入口</strong> CLI 收集输入，或由 Python 调用 <code>propagate</code>。</li>
+<li><strong>准备</strong> Graph 构建初始状态，写入标的、日期、证券身份与持仓上下文。</li>
+<li><strong>并行分析</strong> 行情分析师、新闻分析师和 Memory Log 可以同时工作。此例未选择情绪和基本面分析师。</li>
+<li><strong>汇合</strong> 父图收齐本轮报告与 Memory 输出，启动多空辩论。</li>
+<li><strong>综合决策</strong> Research Manager 汇总，Trader 提出方案，三种风险角色轮转，Portfolio Manager 输出评级与理由。</li>
+<li><strong>结果</strong> 返回最终状态和评级，并写决策日志。需要 Markdown 或 HTML 报告时再调用 <code>save_reports</code>。</li>
+</ol>
+<h2 id="sequence">一次研究的调用时序</h2>
+<figure class="source-map" id="sequence-map">
+<div class="map-scroll" tabindex="0" role="region" aria-label="研究调用时序图，窄屏可横向滚动">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 735" role="img" aria-labelledby="seq-title seq-desc">
+<title id="seq-title">行情与新闻双分析师研究的调用时序</title>
+<desc id="seq-desc">自上而下阅读。调用方发起研究，父图并行启动行情、新闻与决策记忆分支。全部返回后，研究和风险角色依次工作。引擎记录决策后向调用方返回结果。</desc>
+<defs><marker id="seq-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#49657b"/></marker></defs>
+<rect x="174" y="180" width="550" height="278" rx="8" fill="#eef7f4" stroke="#73a193"/>
+<path d="M175 282 H723" stroke="#99b8ae" stroke-dasharray="6 5"/>
+<path d="M175 365 H723" stroke="#99b8ae" stroke-dasharray="6 5"/>
+<g><path class="seq-life" d="M68 70 V714"/><rect x="5" y="14" width="126" height="56" rx="8" fill="#fff" stroke="#899fac"/>
+<text class="map-title" x="68" y="39">调用方</text>
+<text class="map-detail" x="68" y="59">Python API</text></g>
+<g><path class="seq-life" d="M220 70 V714"/><rect x="157" y="14" width="126" height="56" rx="8" fill="#1b3c50" stroke="#899fac"/>
+<text class="map-title light" x="220" y="39">研究引擎</text>
+<text class="map-detail light" x="220" y="59">Graph 与父图</text></g>
+<g><path class="seq-life" d="M375 70 V714"/><rect x="312" y="14" width="126" height="56" rx="8" fill="#e6f4ef" stroke="#899fac"/>
+<text class="map-title" x="375" y="39">行情分析师</text>
+<text class="map-detail" x="375" y="59">market</text></g>
+<g><path class="seq-life" d="M527 70 V714"/><rect x="464" y="14" width="126" height="56" rx="8" fill="#e6f4ef" stroke="#899fac"/>
+<text class="map-title" x="527" y="39">新闻分析师</text>
+<text class="map-detail" x="527" y="59">news</text></g>
+<g><path class="seq-life" d="M677 70 V714"/><rect x="614" y="14" width="126" height="56" rx="8" fill="#fff4dc" stroke="#899fac"/>
+<text class="map-title" x="677" y="39">决策记忆</text>
+<text class="map-detail" x="677" y="59">Memory Log</text></g>
+<g><path class="seq-life" d="M828 70 V714"/><rect x="765" y="14" width="126" height="56" rx="8" fill="#e6f4ef" stroke="#899fac"/>
+<text class="map-title" x="828" y="39">后续研究角色</text>
+<text class="map-detail" x="828" y="59">辩论与决策</text></g>
+<text class="seq-msg" x="144" y="103">propagate(…)</text>
+<path class="wire" d="M68 111 H218" marker-end="url(#seq-arrow)"/>
+<path class="wire" d="M220 139 h22 v19 h-20" marker-end="url(#seq-arrow)"/><text class="seq-note" x="254" y="152">校验研究日期，生成初始状态并调用父图</text>
+<rect x="179" y="184" width="190" height="25" rx="5" fill="#d1e9df"/><text class="seq-tag" x="274" y="202">par · 三个分支并行</text>
+<text class="seq-msg" x="297.5" y="228">启动行情分析</text>
+<path class="wire" d="M220 236 H373" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="297.5" y="262">market_report</text>
+<path class="wire seq-return" d="M375 270 H222" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="373.5" y="309">启动新闻分析</text>
+<path class="wire" d="M220 317 H525" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="373.5" y="343">news_report</text>
+<path class="wire seq-return" d="M527 351 H222" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="448.5" y="392">结算到期决策，读取历史经验</text>
+<path class="wire" d="M220 400 H675" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="448.5" y="432">past_context、memory_note</text>
+<path class="wire seq-return" d="M677 440 H222" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="524" y="492">全部分支结束，进入多空辩论</text>
+<path class="wire" d="M220 500 H826" marker-end="url(#seq-arrow)"/>
+<path class="wire" d="M828 524 h22 v19 h-20" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="631" y="540">研究经理 → 交易员 → 风险讨论 → 组合经理</text>
+<text class="seq-msg" x="524" y="575">最终决策写入父图状态，父图执行结束</text>
+<path class="wire seq-return" d="M828 583 H222" marker-end="url(#seq-arrow)"/>
+<path class="wire" d="M220 607 h22 v19 h-20" marker-end="url(#seq-arrow)"/><text class="seq-note" x="254" y="620">写入本轮状态日志（JSON）</text>
+<text class="seq-msg" x="448.5" y="655">有最终决策时，将决策与评级记入日志</text>
+<path class="wire" d="M220 663 H675" marker-end="url(#seq-arrow)"/>
+<text class="seq-msg" x="144" y="700">final_state, rating</text>
+<path class="wire seq-return" d="M220 708 H70" marker-end="url(#seq-arrow)"/>
+</svg></div>
+<figcaption>按时间从上往下读。实线表示调用，虚线表示返回。绿色框中的三组消息可以交错执行，汇合后才开始辩论。图示采用默认关闭 checkpoint 的成功路径，最后一列合并了依次运行的研究与风险角色。<span>源码依据　<a href="../tradingagents/graph/trading_graph.py">propagate / _run_graph / record_decision</a> · <a href="../tradingagents/graph/setup.py">GraphSetup.setup_graph</a> · <a href="../tradingagents/memory/log.py">TradingMemoryLog.store_decision</a></span></figcaption>
+</figure>
+<h2 id="tools-flow">跟着一条工具调用走</h2>
+<figure class="source-map" id="tool-map">
+<div class="map-scroll" tabindex="0" role="region" aria-label="分析师的工具调用循环，窄屏可横向滚动">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 516" role="img" aria-labelledby="tool-map-title tool-map-desc">
+<title id="tool-map-title">分析师的工具调用循环</title>
+<desc id="tool-map-desc">行情、新闻和基本面分析师共用这条循环。情绪分析师在节点内预取资料后直接写报告。图中取行情的分支以 get_stock_data 为例。</desc>
+<defs><marker id="tool-map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#49657b"/></marker></defs>
+<g><rect x="208" y="15" width="310" height="62" rx="9" fill="#1b3c50" stroke="#1b3c50"/>
+<text x="363" y="44" class="map-title light">分析师调用模型</text><text x="363" y="66" class="map-detail light">传入本轮消息及可用工具</text></g>
+<path class="wire" d="M363 77 V99" marker-end="url(#tool-map-arrow)"/>
+<polygon points="363,101 482,146 363,191 244,146" fill="#fff4dc" stroke="#b08a49"/><text x="363" y="151" class="map-title">请求工具？</text>
+<path class="wire" d="M482 146 H655" marker-end="url(#tool-map-arrow)"/>
+<text class="edge-label" x="557" y="135">否，已有报告</text>
+<g><rect x="658" y="115" width="208" height="62" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="762" y="144" class="map-title">提交报告</text><text x="762" y="166" class="map-detail">只返回本分析师的报告字段</text></g>
+<path class="wire" d="M363 191 V222" marker-end="url(#tool-map-arrow)"/>
+<text class="edge-label" x="407" y="213">是</text>
+<g><rect x="168" y="224" width="390" height="76" rx="9" fill="#fff" stroke="#9aaebb"/>
+<text x="363" y="260" class="map-title">ToolNode 执行所请求的工具</text><text x="363" y="282" class="map-detail">get_stock_data → route_to_vendor → 供应商</text></g>
+<path class="wire" d="M363 300 V334" marker-end="url(#tool-map-arrow)"/>
+<text class="edge-label" x="503" y="323">结果写回本分析师的消息历史</text>
+<polygon points="363,336 494,382 363,428 232,382" fill="#fff4dc" stroke="#b08a49"/><text x="363" y="387" class="map-title">达到轮数上限？</text>
+<path class="wire" d="M232 382 H82 V46 H206" marker-end="url(#tool-map-arrow)"/>
+<text class="edge-label" x="151" y="369">否，继续分析</text>
+<path class="wire" d="M494 382 H616" marker-end="url(#tool-map-arrow)"/>
+<text class="edge-label" x="552" y="370">是</text>
+<g><rect x="619" y="348" width="248" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="743" y="380" class="map-title">wrap_up 收尾</text><text x="743" y="402" class="map-detail">使用已有材料生成报告</text></g>
+<path class="wire" d="M762 348 V179" marker-end="url(#tool-map-arrow)"/>
+<text class="edge-label" x="450" y="481">默认上限为 20 轮。一条模型消息可请求多个工具，计作一轮。</text>
+</svg></div>
+<figcaption>行情、新闻和基本面分析师共用这条循环。情绪分析师在节点内预取资料后直接写报告。图中取行情的分支以 get_stock_data 为例。 <span>源码依据　<a href="../tradingagents/graph/setup.py">_analyst_graph</a> · <a href="../tradingagents/agents/analysts/turn.py">take_turn</a> · <a href="../tradingagents/agents/tools.py">get_stock_data</a> · <a href="../tradingagents/dataflows/router.py">route_to_vendor</a> · <a href="../tradingagents/agents/analysts/sentiment_analyst.py">情绪预取</a></span></figcaption>
+</figure>
+<ol>
+<li><code>market_analyst.py</code> 声明 <code>TOOLS</code> 并构造行情节点。第一次执行时，节点从 <code>AgentState</code> 取标的和研究日期，准备提示词。</li>
+<li><code>turn.py</code> 的 <code>take_turn</code> 把工具定义绑定给模型。模型可直接给报告，也可请求 <code>get_stock_data</code> 等工具。</li>
+<li><code>setup.py</code> 的 <code>_tools_or_done</code> 检查返回消息中的 <code>tool_calls</code>。如果有调用，ToolNode 用相同的工具集合执行请求。</li>
+<li><code>tools.py</code> 中的 <code>get_stock_data</code> 约束请求日期并调用 <code>route_to_vendor</code>。路由根据工具或类别配置选数据供应商。</li>
+<li>工具结果进入同一分析师的消息历史。模型可再次请求工具或写报告。达到轮次上限时，子图要求模型总结并结束。</li>
+</ol>
+<p>可按 <a href="../tradingagents/agents/analysts/market_analyst.py">市场分析师</a> → <a href="../tradingagents/agents/analysts/turn.py">模型调用</a> → <a href="../tradingagents/graph/setup.py">子图和条件边</a> → <a href="../tradingagents/agents/tools.py">工具</a> → <a href="../tradingagents/dataflows/router.py">供应商路由</a> 的顺序对照源码。</p>
+<a class="back" href="#top">返回目录 ↑</a></section><section id="upstream"><h2>Phase 1 · 原版源码分析</h2>
+<p>审计基准为本地 <code>develop</code> 的 <code>9fa1196fffbcfd9de5146d2dd2869df84ab99838</code>，与本地 <code>origin/main</code> 相同。origin 指向 liushuai37/TradingAgents-Ashares，upstream 指向 TauricResearch/TradingAgents。本地无 <code>upstream/main</code> 引用，未独立比对远端 HEAD。任务开始时 AGENTS.md 与交接文档已暂存，.idea/ 未跟踪。许可证见 <a href="../LICENSE">LICENSE</a>（Apache 2.0）。</p>
+<p><a href="../README.md">README</a> 提供 pip、Docker、CLI 和 Python API 启动说明。<a href="../pyproject.toml">pyproject.toml</a> 要求 Python ≥3.11，声明 LangGraph、SQLite checkpoint、LangChain 模型客户端、pandas、yfinance、Typer 等依赖。dev extra 提供 pytest，默认排除 integration，<a href="../.github/workflows/ci.yml">CI</a> 在 Linux 测试 Python 3.11–3.14。以下链接和符号均以该 commit 为准。</p>
+<h3>执行链路</h3>
+<ol>
+<li><strong>入口</strong>。pyproject 的 <code>tradingagents = cli.main:app</code> 指向 <a href="../cli/main.py">cli/main.py</a> 的 Typer 应用。其 <code>analyze</code> 进入 <a href="../cli/run.py">cli/run.py</a> 的 <code>run_analysis</code>，由 <code>_build_run_config</code> 合并输入并构造 Graph，随后创建 State、配置回调和 checkpoint、迭代 <code>stream_run</code>、记录决策和选择导出。程序入口是 <a href="../tradingagents/graph/trading_graph.py">trading_graph.py</a> 的 <code>TradingAgentsGraph.propagate(ticker, trade_date, asset_type, portfolio)</code>，日期需为非未来的 YYYY-MM-DD。它在 run config 和 checkpoint 作用域中执行 <code>_run_graph</code>，通常同步 invoke，debug 则消费流，最终给出 <code>(final_state, rating)</code>。</li>
+<li><strong>组装</strong>。<code>TradingAgentsGraph.__init__</code> 创建 quick/deep 客户端、Memory Log 和 ConditionalLogic，调用 <a href="../tradingagents/graph/setup.py">setup.py</a> 的 <code>GraphSetup.setup_graph</code> 后编译。<code>create_run_state</code> 调用 <a href="../tradingagents/graph/propagation.py">propagation.py</a> 的 <code>Propagator.create_initial_state</code>，注入证券身份与可选持仓。身份查询走 <a href="../tradingagents/agents/context.py">context.py</a> 的 <code>resolve_instrument_identity</code>，独立于工具供应商路由。</li>
+<li><strong>并行取证</strong>。<code>setup_graph</code> 从 START 扇出到选中的分析师和 Memory Log，<code>add_edge(first_steps, &quot;Bull Researcher&quot;)</code> 等待全部结束。<a href="../tradingagents/graph/analyst_execution.py">analyst_execution.py</a> 的 <code>ANALYST_NODE_SPECS</code> 将四种键映射到节点、报告字段及工具。四者都用 <code>_analyst_graph</code>，各自保有消息历史，只向父图返回各自的报告字段。</li>
+<li><strong>工具循环</strong>。market、news、fundamentals 在 <a href="../tradingagents/agents/analysts/turn.py">turn.py</a> 的 <code>take_turn</code> 调用绑定相同 TOOLS 的模型。<code>_tools_or_done</code> 检查最后的 tool_calls，进入 ToolNode 或结束。每条带调用的模型消息计为一轮，可含多个调用。默认 20 轮，到限转 wrap_up，把工具交互转成文本并用未绑定工具的模型汇总，随后直接结束。默认递归上限 100，构造时验证其大于 <code>2 * max_tool_rounds + 2</code>。<code>social</code> 无 ToolNode，<a href="../tradingagents/agents/analysts/sentiment_analyst.py">sentiment_analyst.py</a> 的 <code>create_sentiment_analyst</code> 先直接取新闻、StockTwits 和 Reddit，再调用模型。</li>
+<li><strong>综合研判</strong>。<a href="../tradingagents/graph/conditional_logic.py">conditional_logic.py</a> 按 count 和说话者路由。Bull → Bear 交替，达到 <code>2 × max_debate_rounds</code> 后进入 Research Manager → Trader。Aggressive → Conservative → Neutral 串行轮转，达到 <code>3 × max_risk_discuss_rounds</code> 后由 Portfolio Manager 结束。两个轮数默认为 1。辩手调用普通模型并更新辩论状态，两位 Manager 使用 deep，其余用 quick。Trader 与两位 Manager 通过 <a href="../tradingagents/agents/structured.py">structured.py</a> 尝试结构化输出并保留文本回退，均无 ToolNode 循环。</li>
+<li><strong>落盘与输出</strong>。<code>record_decision</code> 写每标的/日期上的 JSON 状态文件并记待结算决策。同标的同日的文件路径可覆盖。成功才清除相应 checkpoint。<a href="../tradingagents/agents/rating.py">rating.py</a> 的 <code>run_rating</code> 处理五档评级与不可解析时的 REVIEW。<code>save_reports</code> 是独立导出入口，<a href="../tradingagents/reporting.py">reporting.py</a> 的 <code>write_report_tree</code> 和 <a href="../tradingagents/report_html.py">report_html.py</a> 生成分节 Markdown、可选 HTML。</li>
+</ol>
+<h3>原版能力与适用边界</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>源码依据</th>
+<th>范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技术与量价</td>
+<td><a href="../tradingagents/agents/analysts/market_analyst.py">market_analyst.py</a> <code>TOOLS</code>、<a href="../tradingagents/agents/tools.py">tools.py</a> <code>get_stock_data/get_indicators/get_verified_market_snapshot</code></td>
+<td>行情、技术指标、快照。多周期与 A 股复权口径待验证</td>
+</tr>
+<tr>
+<td>基本面</td>
+<td><a href="../tradingagents/agents/analysts/fundamentals_analyst.py">fundamentals_analyst.py</a> <code>TOOLS</code>、<a href="../tradingagents/dataflows/router.py">router.py</a> <code>VENDOR_METHODS</code></td>
+<td>财务摘要与三表，SEC EDGAR 提供美国申报口径，Yahoo 等按配置覆盖。A 股公告及估值口径待验证</td>
+</tr>
+<tr>
+<td>新闻、宏观、情绪</td>
+<td><a href="../tradingagents/agents/analysts/news_analyst.py">news_analyst.py</a> <code>TOOLS</code>、<code>create_sentiment_analyst</code></td>
+<td>标的与全球新闻、宏观及预测市场等输入、社交情绪。国内政策和市场广度为后续扩展</td>
+</tr>
+<tr>
+<td>State 与持仓</td>
+<td><a href="../tradingagents/agents/state.py">state.py</a> <code>AgentState(MessagesState)</code>、<a href="../tradingagents/portfolio.py">portfolio.py</a> <code>PortfolioContext</code></td>
+<td>分析师报告、辩论、计划、评级与上下文；可读取并渲染用户提供的持仓输入</td>
+</tr>
+<tr>
+<td>Checkpoint</td>
+<td><a href="../tradingagents/graph/checkpointer.py">checkpointer.py</a> <code>get_checkpointer/thread_id/clear_checkpoint</code>、Graph 的 <code>begin_checkpoint/checkpoint_input/end_checkpoint</code></td>
+<td>默认关闭；每证券 SQLite，以标的、日期及签名区分，签名含模型等配置、图形态和持仓指纹。恢复输入为 None；成功清理，失败可留档</td>
+</tr>
+<tr>
+<td>Memory</td>
+<td>Graph 的 <code>_memory_step</code>、<a href="../tradingagents/memory/log.py">log.py</a> <code>TradingMemoryLog</code>、<a href="../tradingagents/memory/settlement.py">settlement.py</a> <code>settle_all_pending/fetch_returns</code></td>
+<td>Markdown 决策日志。并行结算到期决策，用持有窗口与基准收益生成反思；历史运行只读取当时已结算的经验。结算异常可记录说明并继续</td>
+</tr>
+<tr>
+<td>历史决策评估</td>
+<td><a href="../tradingagents/backtest.py">backtest.py</a> <code>run_backtest/summarize</code></td>
+<td>按标的与日期逐项研究，隔离日志，跳过已有记录，按评级汇总方向命中和平均超额，REVIEW 不计分。后续组合研究仍需资金账本、撮合、费用、交易约束等</td>
+</tr>
+<tr>
+<td>A 股代码</td>
+<td><a href="../tradingagents/dataflows/symbols.py">symbols.py</a> 上海后缀转换、<a href="../tradingagents/default_config.py">default_config.py</a> benchmark_map</td>
+<td>已有 Yahoo 上海 .SS、深圳 .SZ 路径，上海 .SH 可归一化；覆盖、可用性、除权和历史数据完整性待实测</td>
+</tr>
+</tbody>
+</table>
+<p><a href="../tradingagents/dataflows/date_window.py">date_window.py</a> 的 <code>as_of/as_of_window</code> 及未披露数据的 withholding 函数、情绪分析的历史窗口和 Memory 截止过滤是已有时间保护。历史身份查找、供应商口径、修订版本与逐时可用性须按来源单独验证，当前链路无法据此推出全市场无前视保证。Tushare、A 股板块轮动、资金、龙虎榜、制度和专项规则均留待后续阶段。</p>
+<h3>本地运行验证</h3>
+<p>Windows 隔离环境使用 CPython 3.12.14，安装项目及 dev extra 成功，主要解析版本为 TradingAgents 0.7.1、LangGraph 1.2.24、langchain-core 1.8.4、checkpoint SQLite 3.1.3 和 pytest 9.2.0。默认网络权限下访问 PyPI 返回 socket 10013，经允许联网后完成安装。未修改项目依赖声明。</p>
+<ul>
+<li><code>python -m pytest -q tests/test_graph_end_to_end.py</code>，15 项通过。该套件通过 <code>ScriptedModel</code> 和 <code>offline</code> fixture 隔离模型与供应商，实际调用 <code>TradingAgentsGraph.propagate</code> 和流式路径，覆盖完整决策与落盘、结构化及文本回退、分析师并行、增量报告、工具轮次上限、checkpoint 恢复、Memory 结算和配置隔离。</li>
+<li><code>tradingagents --help</code> 成功显示已安装入口及命令。</li>
+<li><code>python -m pytest -q</code> 沙箱运行结果为 1406 通过、1 失败、6 跳过、1 取消选中，另有 100 项子测试通过。跳过项来自 Windows 与 POSIX 环境差异及可选 Bedrock SDK 缺失，默认筛除 integration。唯一失败为 <code>tests/test_chatgpt_auth.py::test_the_browser_answer_reaches_the_loopback_and_strays_are_ignored</code>，沙箱访问 127.0.0.1 被拒（WinError 10013），继而超时。允许本地回环后单独重跑该用例通过。</li>
+<li>本次未配置可验证的真实模型和数据连接。测试价格、报告和模型响应来自 fixture，A 股行情、供应商 usage 和服务端 SSE 接入仍待验证。</li>
+</ul>
+<a class="back" href="#top">返回目录 ↑</a></section><section id="extensions"><h2>Phase 1 · 扩展点与边界</h2>
+<p>源码基准 <code>9fa1196fffbcfd9de5146d2dd2869df84ab99838</code>。运行验证见<a href="#upstream">原版源码分析</a>。</p>
+<table>
+<thead>
+<tr>
+<th>切面</th>
+<th>现有实现与定位</th>
+<th>现有接口的接入边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型</td>
+<td><a href="../tradingagents/llm_clients/factory.py">factory.py</a> <code>create_llm_client/create_tier_client/build_llm_kwargs</code> 区分原生 Anthropic、Google、Azure、Bedrock 及 <a href="../tradingagents/llm_clients/openai_client.py">openai_client.py</a> 中兼容供应商；quick/deep 可分别设置模型、供应商及端点。默认和环境变量见 <a href="../tradingagents/default_config.py">default_config.py</a></td>
+<td>原版接受环境变量、运行配置和分档模型参数。具体可用参数取决于供应商客户端。</td>
+</tr>
+<tr>
+<td>工具</td>
+<td><a href="../tradingagents/agents/tools.py">tools.py</a> 的模块级工具，<a href="../tradingagents/graph/analyst_execution.py">analyst_execution.py</a> 的静态 specs，<a href="../tradingagents/graph/setup.py">setup.py</a> 的 ToolNode 与各分析师 TOOLS</td>
+<td>新增模型可调用工具时，需同时核对模型绑定与 ToolNode 的工具集合。</td>
+</tr>
+<tr>
+<td>数据路由</td>
+<td><a href="../tradingagents/dataflows/router.py">router.py</a> 的 TOOLS_CATEGORIES、VENDOR_METHODS、<code>get_vendor/route_to_vendor</code>。工具级覆盖分类，显式有序链过滤不支持方法的供应商，default 使用该方法全部可用供应商。区分无数据、供应商不可用和可传播异常；宏观/预测市场可降级</td>
+<td>身份查询、情绪预取部分来源及 Memory 结算各有独立路径。修改工具供应商映射只影响经过该路由的调用。</td>
+</tr>
+<tr>
+<td>配置隔离</td>
+<td><a href="../tradingagents/dataflows/config.py">config.py</a> 的 <code>run_config/run_config_context</code> 使用 ContextVar，<code>get_config</code> 优先读取运行配置；Graph 构造时仍调用进程级 <code>set_config</code>，Graph 字段含可变 checkpoint 状态</td>
+<td>工具在运行作用域内读取配置。构造阶段仍影响进程级配置，checkpoint 也保存在 Graph 实例上。</td>
+</tr>
+<tr>
+<td>监控</td>
+<td><a href="../tradingagents/graph/trading_graph.py">trading_graph.py</a> <code>stream_run</code> 消费带子图的 values/tasks，外部只接到消息和状态片段；顶层 task start/end/errors 未透传。<a href="../tradingagents/graph/propagation.py">propagation.py</a> <code>get_graph_args</code> 可注入回调；<a href="../cli/stats_handler.py">stats_handler.py</a> 统计模型/工具开始及响应 usage。CLI 还有据报告推断的状态</td>
+<td>模型回调和工具回调分别接入。情绪节点直接调用供应商的部分不会自动产生 ToolNode 事件。</td>
+</tr>
+<tr>
+<td>异常、取消、恢复</td>
+<td>Graph 通过同步 invoke/stream；流在 finally 关闭。运行异常可传给调用者，工具错误与供应商降级另有语义，Memory 错误可保留研究。checkpoint 生命周期由 Graph 管理</td>
+<td>源码提供 SQLite 节点续跑。研究任务级取消、重试记录和服务恢复没有公共入口。</td>
+</tr>
+</tbody>
+</table>
+<p>按 <code>tradingagents/</code>、<code>cli/</code> 中的定义和调用点审计，<code>create_*_analyst</code> 等角色工厂和 <code>GraphSetup.setup_graph</code> 已存在，动态 Agent Factory/Registry、Workflow Registry、Skill Loader、MCP Client、通用 Hook Manager 未见对外入口。模型供应商工厂、LangChain callbacks、工具静态映射提供明确的复用基础。</p>
+<a class="back" href="#top">返回目录 ↑</a></section></main></body></html>
