@@ -89,35 +89,25 @@ li{margin:.4rem 0}.flow li{padding:.45rem .7rem;border-radius:6px}.back{display:
 <div class="map-scroll" tabindex="0" role="region" aria-label="一次研究的执行流程，窄屏可横向滚动">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="research-map-title research-map-desc">
 <title id="research-map-title">一次研究的执行流程</title>
-<desc id="research-map-desc">图中展示默认四位分析师。只选择行情和新闻时，父图等待这两份报告与 Memory Log 完成，再由多头研究员开场。</desc>
+<desc id="research-map-desc">本图与下方时序图采用同一示例，只选行情和新闻。两位分析师与 Memory Log 从同一起点并行执行。三者全部完成后，多头研究员才开始发言。</desc>
 <defs><marker id="research-map-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#49657b"/></marker></defs>
 <g><rect x="282" y="16" width="336" height="64" rx="9" fill="#1b3c50" stroke="#1b3c50"/>
 <text x="450" y="46" class="map-title light">准备本轮研究</text><text x="450" y="68" class="map-detail light">标的、研究日期、可选持仓</text></g>
-<path class="wire" d="M450 80 V102"/>
-<path class="wire" d="M98 102 H802"/>
-<path class="wire" d="M98 102 V125" marker-end="url(#research-map-arrow)"/>
-<path class="wire" d="M274 102 V125" marker-end="url(#research-map-arrow)"/>
-<path class="wire" d="M450 102 V125" marker-end="url(#research-map-arrow)"/>
-<path class="wire" d="M626 102 V125" marker-end="url(#research-map-arrow)"/>
-<path class="wire" d="M802 102 V125" marker-end="url(#research-map-arrow)"/>
-<g><rect x="16" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
-<text x="98" y="159" class="map-title">行情</text><text x="98" y="181" class="map-detail">量价与指标</text></g>
-<g><rect x="192" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
-<text x="274" y="159" class="map-title">情绪</text><text x="274" y="181" class="map-detail">新闻与社交预取</text></g>
-<g><rect x="368" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
-<text x="450" y="159" class="map-title">新闻</text><text x="450" y="181" class="map-detail">标的与宏观新闻</text></g>
-<g><rect x="544" y="127" width="164" height="68" rx="9" fill="#e6f4ef" stroke="#548779"/>
-<text x="626" y="159" class="map-title">基本面</text><text x="626" y="181" class="map-detail">财务数据</text></g>
-<g><rect x="720" y="127" width="164" height="68" rx="9" fill="#fff4dc" stroke="#b08a49"/>
-<text x="802" y="159" class="map-title">Memory Log</text><text x="802" y="181" class="map-detail">结算与读取经验</text></g>
-<path class="wire" d="M98 195 V216"/>
-<path class="wire" d="M274 195 V216"/>
-<path class="wire" d="M450 195 V216"/>
-<path class="wire" d="M626 195 V216"/>
-<path class="wire" d="M802 195 V216"/>
-<path class="wire" d="M98 216 H802"/>
-<path class="wire" d="M450 216 V250" marker-end="url(#research-map-arrow)"/>
-<text class="edge-label" x="543" y="240">全部分支完成</text>
+<rect x="20" y="86" width="860" height="137" rx="9" fill="#eef7f4" stroke="#73a193"/>
+<text class="seq-tag" x="140" y="108">并行阶段 · 三个分支</text>
+<path class="wire" d="M450 80 V114 M162 114 H738"/>
+<path class="wire" d="M162 114 V133" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M450 114 V133" marker-end="url(#research-map-arrow)"/>
+<path class="wire" d="M738 114 V133" marker-end="url(#research-map-arrow)"/>
+<g><rect x="60" y="135" width="204" height="62" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="162" y="160" class="map-title">行情分析师</text><text x="162" y="183" class="map-detail">分析量价与技术指标</text></g>
+<g><rect x="348" y="135" width="204" height="62" rx="9" fill="#e6f4ef" stroke="#548779"/>
+<text x="450" y="160" class="map-title">新闻分析师</text><text x="450" y="183" class="map-detail">分析标的与宏观新闻</text></g>
+<g><rect x="636" y="135" width="204" height="62" rx="9" fill="#fff4dc" stroke="#b08a49"/>
+<text x="738" y="160" class="map-title">Memory Log</text><text x="738" y="183" class="map-detail">结算与读取历史经验</text></g>
+<path class="wire" d="M162 197 V214 H738 V197 M450 197 V214"/>
+<path class="wire" d="M450 214 V250" marker-end="url(#research-map-arrow)"/>
+<text class="edge-label" x="619" y="243">汇合 · 三个分支均完成后进入串行研判</text>
 <g><rect x="260" y="252" width="380" height="70" rx="9" fill="#fff" stroke="#9aaebb"/>
 <text x="450" y="285" class="map-title">多头 ⇄ 空头</text><text x="450" y="307" class="map-detail">轮流发言，默认各 1 次</text></g>
 <path class="wire" d="M450 322 V338 H286 V356" marker-end="url(#research-map-arrow)"/>
@@ -136,15 +126,15 @@ li{margin:.4rem 0}.flow li{padding:.45rem .7rem;border-radius:6px}.back{display:
 <path class="wire" d="M450 630 V654" marker-end="url(#research-map-arrow)"/>
 <text class="edge-label" x="450" y="680">记录决策与评级　·　按需导出报告</text>
 </svg></div>
-<figcaption>图中展示默认四位分析师。只选择行情和新闻时，父图等待这两份报告与 Memory Log 完成，再由多头研究员开场。 <span>源码依据　<a href="../tradingagents/graph/setup.py">setup_graph</a> · <a href="../tradingagents/graph/conditional_logic.py">发言轮次与出口</a> · <a href="../tradingagents/graph/trading_graph.py">_memory_step / record_decision</a></span></figcaption>
+<figcaption>本图与下方时序图采用同一示例，只选行情和新闻。两位分析师与 Memory Log 从同一起点并行执行。三者全部完成后，多头研究员才开始发言。 <span>源码依据　<a href="../tradingagents/graph/setup.py">setup_graph</a> · <a href="../tradingagents/graph/conditional_logic.py">发言轮次与出口</a> · <a href="../tradingagents/graph/trading_graph.py">_memory_step / record_decision</a></span></figcaption>
 </figure>
-<p>以输入 <code>600519.SH</code>、选择 market 和 news、指定一个过去的研究日期为例。这个例子只演示调用顺序，未请求行情或生成投资结论。</p>
+<p>示例标的是 <code>600519.SH</code>。默认选齐四位分析师时，并行阶段会增加情绪和基本面两个分支，共五个分支，汇合规则相同。</p>
 <ol class="flow">
 <li><strong>入口</strong> CLI 收集输入，或由 Python 调用 <code>propagate</code>。</li>
 <li><strong>准备</strong> Graph 构建初始状态，写入标的、日期、证券身份与持仓上下文。</li>
-<li><strong>并行分析</strong> 行情分析师、新闻分析师和 Memory Log 可以同时工作。此例未选择情绪和基本面分析师。</li>
+<li><strong>并行取证</strong> 行情、新闻与 Memory Log 各自执行，完成顺序由本次运行决定。</li>
 <li><strong>汇合</strong> 父图收齐本轮报告与 Memory 输出，启动多空辩论。</li>
-<li><strong>综合决策</strong> Research Manager 汇总，Trader 提出方案，三种风险角色轮转，Portfolio Manager 输出评级与理由。</li>
+<li><strong>串行研判</strong> 多空研究员交替发言，研究经理汇总，交易员提出方案，激进、保守和中性角色轮流讨论风险，最后由组合经理给出评级与理由。</li>
 <li><strong>结果</strong> 返回最终状态和评级，并写决策日志。需要 Markdown 或 HTML 报告时再调用 <code>save_reports</code>。</li>
 </ol>
 <h2 id="sequence">一次研究的调用时序</h2>
@@ -203,7 +193,7 @@ li{margin:.4rem 0}.flow li{padding:.45rem .7rem;border-radius:6px}.back{display:
 <text class="seq-msg" x="144" y="700">final_state, rating</text>
 <path class="wire seq-return" d="M220 708 H70" marker-end="url(#seq-arrow)"/>
 </svg></div>
-<figcaption>按时间从上往下读。实线表示调用，虚线表示返回。绿色框中的三组消息可以交错执行，汇合后才开始辩论。图示采用默认关闭 checkpoint 的成功路径，最后一列合并了依次运行的研究与风险角色。<span>源码依据　<a href="../tradingagents/graph/trading_graph.py">propagate / _run_graph / record_decision</a> · <a href="../tradingagents/graph/setup.py">GraphSetup.setup_graph</a> · <a href="../tradingagents/memory/log.py">TradingMemoryLog.store_decision</a></span></figcaption>
+<figcaption>实线表示调用，虚线表示返回。绿色 par 框内，每个分支都是先调用、后返回。三个分支之间没有固定先后。父图等到三者都返回，再按箭头顺序执行辩论与决策。图示采用默认关闭 checkpoint 的成功路径，最后一列合并了依次运行的研究与风险角色。<span>源码依据　<a href="../tradingagents/graph/trading_graph.py">propagate / _run_graph / record_decision</a> · <a href="../tradingagents/graph/setup.py">GraphSetup.setup_graph</a> · <a href="../tradingagents/memory/log.py">TradingMemoryLog.store_decision</a></span></figcaption>
 </figure>
 <h2 id="tools-flow">跟着一条工具调用走</h2>
 <figure class="source-map" id="tool-map">
