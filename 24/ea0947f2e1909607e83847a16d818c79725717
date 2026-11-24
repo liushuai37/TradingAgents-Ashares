@@ -1,0 +1,23 @@
+docs/phase-1-source-guide.html
+  s_6a97cec3e3313f::t_eb99b92685a9a6 92,96-110,129,131,135,196
+  s_6a97cec3e3313f::t_9167cccfb827bd 137
+docs/phase-2-design.md
+  s_6a97cec3e3313f::t_2650d208a10df7 43-45
+  s_6a97cec3e3313f::t_9167cccfb827bd 41-42,46-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "ai_metrics_version": "2.0.6",
+  "base_commit_sha": "24ea0947f2e1909607e83847a16d818c79725717",
+  "prompts": {},
+  "sessions": {
+    "s_6a97cec3e3313f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20b91-cbc9-7a32-a878-468812b034a2",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "liushuai37 <m15503698480@163.com>"
+    }
+  }
+}
